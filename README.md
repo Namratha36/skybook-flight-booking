@@ -67,4 +67,4 @@ npm run build
 - PDF Ticket Generation
 
 ---
-*Built with ❤️ by Namra.*
+*Built with ❤️ by NamrathaJyoshika.*
