@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { toast } from 'react-hot-toast';
-import { Users, Plane, CalendarCheck, IndianRupee, LayoutDashboard, Plus, Trash2, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Plane, CalendarCheck, IndianRupee, LayoutDashboard, Plus, Trash2, Edit, CheckCircle, XCircle, Route, TrendingUp, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 
@@ -75,7 +75,20 @@ export default function AdminDashboard() {
   };
 
   // Calculations
-  const totalRevenue = bookings.reduce((sum, b) => b.status === 'Confirmed' ? sum + b.totalPrice : sum, 0);
+  const confirmedBookings = bookings.filter(b => b.status === 'Confirmed');
+  const cancelledBookings = bookings.filter(b => b.status === 'Cancelled');
+  const pendingBookings = bookings.filter(b => b.status === 'Pending');
+  const totalRevenue = confirmedBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+  // Popular routes
+  const routeCounts = {};
+  bookings.forEach(b => {
+    const route = `${b.flightDetails?.from} → ${b.flightDetails?.to}`;
+    routeCounts[route] = (routeCounts[route] || 0) + 1;
+  });
+  const popularRoutes = Object.entries(routeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
 
   // Mock Revenue Data for Chart (Using current bookings simulated over days)
   const chartData = [
@@ -163,15 +176,69 @@ export default function AdminDashboard() {
                 <div className="bg-white dark:bg-[hsl(var(--card))] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
                   <div className="flex items-center gap-4 mb-2">
                     <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg"><IndianRupee size={24} /></div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue</h3>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Demo Revenue</h3>
                   </div>
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">₹{totalRevenue.toLocaleString()}</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Simulated / Fictional</p>
+                </div>
+              </div>
+
+              {/* Secondary Stats Row: Booking Status Breakdown */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-[hsl(var(--card))] p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Confirmed Bookings</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{confirmedBookings.length}</p>
+                    </div>
+                    <CheckCircle className="text-green-500 opacity-80" size={24} />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-[hsl(var(--card))] p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Cancelled Bookings</p>
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{cancelledBookings.length}</p>
+                    </div>
+                    <XCircle className="text-red-500 opacity-80" size={24} />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-[hsl(var(--card))] p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Pending Bookings</p>
+                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{pendingBookings.length}</p>
+                    </div>
+                    <Clock className="text-amber-500 opacity-80" size={24} />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-[hsl(var(--card))] p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Confirmation Rate</p>
+                      <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
+                        {bookings.length ? Math.round((confirmedBookings.length / bookings.length) * 100) : 0}%
+                      </p>
+                    </div>
+                    <TrendingUp className="text-indigo-500 opacity-80" size={24} />
+                  </div>
                 </div>
               </div>
 
               {/* Chart */}
               <div className="bg-white dark:bg-[hsl(var(--card))] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Revenue Analytics (7 Days)</h3>
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Revenue Analytics & Booking Trends</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Simulated 7-day revenue trend based on confirmed sample bookings</p>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                    DEMO DATA
+                  </span>
+                </div>
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -187,10 +254,75 @@ export default function AdminDashboard() {
                       <Tooltip 
                         contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }}
                         itemStyle={{ color: '#60a5fa' }}
+                        formatter={(val) => [`₹${Math.round(val).toLocaleString()}`, 'Demo Revenue']}
                       />
                       <Area type="monotone" dataKey="revenue" stroke="#2563eb" fillOpacity={1} fill="url(#colorRev)" />
                     </AreaChart>
                   </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Popular Routes and Recent Bookings */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Popular Flight Routes */}
+                <div className="bg-white dark:bg-[hsl(var(--card))] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Route className="text-blue-600" size={20} />
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Popular Flight Routes</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {popularRoutes.length > 0 ? (
+                      popularRoutes.map(([route, count], idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800">
+                          <span className="font-medium text-sm text-gray-800 dark:text-gray-200">{route}</span>
+                          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                            {count} {count === 1 ? 'booking' : 'bookings'}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 py-4 text-center">No route data yet. Seed demo data to preview.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Recent Bookings Preview */}
+                <div className="bg-white dark:bg-[hsl(var(--card))] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="text-blue-600" size={20} />
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Bookings</h3>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab('bookings')}
+                      className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                    >
+                      View All →
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {bookings.slice(0, 5).map(b => (
+                      <div key={b.id} className="flex items-center justify-between p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 text-sm">
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">{b.passengerName}</p>
+                          <p className="text-xs text-gray-500">{b.flightDetails?.from} → {b.flightDetails?.to}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900 dark:text-white">₹{b.totalPrice?.toLocaleString()}</p>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            b.status === 'Confirmed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                            b.status === 'Cancelled' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                            'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                          }`}>
+                            {b.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {bookings.length === 0 && (
+                      <p className="text-sm text-gray-500 py-4 text-center">No bookings recorded yet.</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

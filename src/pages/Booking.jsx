@@ -49,9 +49,11 @@ export default function Booking() {
 
     setBookingLoading(true);
     try {
+      const bookingRef = 'SKB-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
       const bookingData = {
         userId: currentUser.uid,
         flightId: flight.id,
+        bookingRef,
         passengerName,
         email,
         phone,
@@ -59,6 +61,8 @@ export default function Booking() {
         totalPrice: flight.price,
         bookingDate: new Date().toISOString(),
         status: 'Confirmed',
+        paymentStatus: 'Demo Paid',
+        isDemo: true,
         flightDetails: {
           airline: flight.airline,
           flightNumber: flight.flightNumber,
@@ -71,7 +75,7 @@ export default function Booking() {
 
       await addDoc(collection(db, 'bookings'), bookingData);
       
-      toast.success('Booking Confirmed Successfully!');
+      toast.success(`Booking Confirmed! Ref: ${bookingRef}`);
       navigate('/my-bookings');
     } catch (error) {
       toast.error('Failed to book flight: ' + error.message);
@@ -277,10 +281,15 @@ export default function Booking() {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-xl transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-70"
             >
               {bookingLoading ? 'Processing...' : (
-                <><CheckCircle size={20} /> Confirm & Pay</>
+                <><CheckCircle size={20} /> Confirm Booking (DEMO)</>
               )}
             </button>
-            <p className="text-xs text-center text-gray-500 mt-4">By clicking confirm, you agree to our Terms & Conditions.</p>
+            <div className="mt-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+              <p className="text-xs text-center text-amber-700 dark:text-amber-300 font-medium">
+                🎓 DEMO MODE — No real payment will be charged. This is a simulated booking for demonstration purposes.
+              </p>
+            </div>
+            <p className="text-xs text-center text-gray-500 mt-3">By clicking confirm, you agree to our Terms & Conditions.</p>
           </motion.div>
         </div>
       </div>

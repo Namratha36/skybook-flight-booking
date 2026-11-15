@@ -80,6 +80,9 @@ export default function SearchFlights() {
         <div className="max-w-7xl mx-auto text-center text-white">
           <h1 className="text-3xl font-bold mb-2">Search Results</h1>
           <p className="text-blue-100">Find the best flights for your journey</p>
+          <p className="text-xs text-blue-200 mt-2 bg-blue-700/50 dark:bg-blue-800/50 inline-block px-3 py-1 rounded-full">
+            💡 Schedules, fares, and availability are realistic fictional sample records for demonstration.
+          </p>
         </div>
       </div>
 
@@ -181,9 +184,19 @@ export default function SearchFlights() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No flights available</h3>
               <p className="text-gray-500 dark:text-gray-400">Try adjusting your search criteria or filters.</p>
               {flights.length === 0 && (
-                 <p className="text-sm text-amber-600 dark:text-amber-400 mt-4 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg inline-block">
-                    Note: Database is empty. Please add flights from the Admin Dashboard.
-                 </p>
+                <div className="mt-4">
+                  <p className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg inline-block">
+                    Note: Database is empty. Use the Demo Data Seeder to populate realistic flights.
+                  </p>
+                  <div className="mt-3">
+                    <button
+                      onClick={() => navigate('/seed')}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5"
+                    >
+                      Go to Demo Seeder
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           ) : (

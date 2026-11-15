@@ -48,9 +48,10 @@ export default function FlightSearchForm() {
               <input
                 type="text"
                 required
+                list="popular-indian-cities"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                placeholder="City or Airport"
+                placeholder="City or Airport (e.g. Hyderabad)"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[hsl(var(--input))] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
               />
             </div>
@@ -63,11 +64,20 @@ export default function FlightSearchForm() {
               <input
                 type="text"
                 required
+                list="popular-indian-cities"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                placeholder="City or Airport"
+                placeholder="City or Airport (e.g. Bengaluru)"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[hsl(var(--input))] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
               />
+              <datalist id="popular-indian-cities">
+                <option value="Hyderabad" />
+                <option value="Bengaluru" />
+                <option value="Delhi" />
+                <option value="Mumbai" />
+                <option value="Chennai" />
+                <option value="Kolkata" />
+              </datalist>
             </div>
           </div>
 

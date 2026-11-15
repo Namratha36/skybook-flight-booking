@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Plane, User, LogOut, Sun, Moon, LayoutDashboard, Settings, ChevronDown } from 'lucide-react';
+import { Plane, User, LogOut, Sun, Moon, LayoutDashboard, Settings, ChevronDown, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
@@ -83,13 +83,22 @@ export default function Navbar() {
                         <Settings size={16} /> Profile Settings
                       </Link>
                       
-                      {/* Admin Link placeholder */}
+                      {/* Admin Link */}
                       <Link 
                         to="/admin" 
                         onClick={() => setIsDropdownOpen(false)}
                         className="flex items-center gap-3 px-4 py-2 text-sm text-amber-600 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                       >
                         <LayoutDashboard size={16} /> Admin Dashboard
+                      </Link>
+
+                      {/* Seed Data Link */}
+                      <Link 
+                        to="/seed" 
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                      >
+                        <Database size={16} /> Seed Demo Data
                       </Link>
                     </div>
 

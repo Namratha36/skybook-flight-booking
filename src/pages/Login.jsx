@@ -56,6 +56,26 @@ export default function Login() {
             <p className="text-gray-500 dark:text-gray-400 mt-2">Please enter your details to sign in.</p>
           </div>
 
+          {/* Quick Demo Credentials Card */}
+          <div className="mb-6 p-3.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">Interview Demo Account</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('demo@skybook.in');
+                  setPassword('Demo@123456');
+                }}
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Autofill
+              </button>
+            </div>
+            <p className="text-xs text-gray-600 dark:text-gray-300 font-mono">
+              demo@skybook.in / Demo@123456
+            </p>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>

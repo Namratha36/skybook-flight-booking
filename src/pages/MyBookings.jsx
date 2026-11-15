@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Plane, Download, Loader } from 'lucide-react';
@@ -18,17 +18,53 @@ export default function MyBookings() {
     async function fetchBookings() {
       if (!currentUser) return;
       try {
-        const q = query(
-          collection(db, 'bookings'),
-          where('userId', '==', currentUser.uid),
-          orderBy('bookingDate', 'desc')
-        );
-        const querySnapshot = await getDocs(q);
-        const fetchedBookings = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setBookings(fetchedBookings);
+        let fetchedList = [];
+        
+        // 1. Fetch user's direct bookings (no compound orderBy to prevent index errors)
+        try {
+          const q = query(
+            collection(db, 'bookings'),
+            where('userId', '==', currentUser.uid)
+          );
+          const querySnapshot = await getDocs(q);
+          fetchedList = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+        } catch (err) {
+          console.warn("User-specific booking fetch warning:", err);
+        }
+
+        // 2. Also include demo bookings for the demo account or if no bookings exist yet
+        const isDemoAccount = currentUser.email?.toLowerCase().includes('demo') || currentUser.role === 'admin';
+        if (isDemoAccount || fetchedList.length === 0) {
+          try {
+            const demoQ = query(
+              collection(db, 'bookings'),
+              where('isDemo', '==', true)
+            );
+            const demoSnapshot = await getDocs(demoQ);
+            const demoList = demoSnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+
+            // Deduplicate by ID
+            const seen = new Set(fetchedList.map(b => b.id));
+            for (const d of demoList) {
+              if (!seen.has(d.id)) {
+                fetchedList.push(d);
+                seen.add(d.id);
+              }
+            }
+          } catch (err) {
+            console.warn("Demo bookings fetch warning:", err);
+          }
+        }
+
+        // Sort in memory by bookingDate descending
+        fetchedList.sort((a, b) => new Date(b.bookingDate || 0) - new Date(a.bookingDate || 0));
+        setBookings(fetchedList);
       } catch (error) {
         console.error("Error fetching bookings: ", error);
         toast.error("Failed to load your bookings");
@@ -83,7 +119,8 @@ export default function MyBookings() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[hsl(var(--background))] pt-24 pb-12">
       <div className="max-w-5xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">My Bookings</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">View and manage your flight reservations. <span className="text-amber-600 dark:text-amber-400 font-medium">DEMO — No real tickets issued.</span></p>
 
         {bookings.length === 0 ? (
           <div className="bg-white dark:bg-[hsl(var(--card))] rounded-2xl p-12 text-center border border-gray-200 dark:border-gray-800">
@@ -114,6 +151,12 @@ export default function MyBookings() {
                     <p className="font-bold text-gray-900 dark:text-white">{booking.flightDetails.airline}</p>
                     <p className="text-xs text-gray-500">{booking.flightDetails.flightNumber}</p>
                     <p className="text-sm font-semibold mt-2 text-blue-600 dark:text-blue-400">Seat: {booking.seatNumber}</p>
+                    {booking.passengerName && (
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">Passenger: <span className="font-medium">{booking.passengerName}</span></p>
+                    )}
+                    {booking.bookingRef && (
+                      <p className="text-xs text-gray-400 mt-0.5 font-mono">Ref: {booking.bookingRef}</p>
+                    )}
                   </div>
 
                   <div className="col-span-1 md:col-span-2 flex items-center justify-between">
@@ -137,6 +180,18 @@ export default function MyBookings() {
                   </div>
 
                   <div className="col-span-1 md:col-span-1 flex flex-col items-start md:items-end justify-center border-t md:border-t-0 md:border-l border-gray-100 dark:border-gray-800 pt-4 md:pt-0 md:pl-6">
+                    <p className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                      ₹{booking.totalPrice ? booking.totalPrice.toLocaleString() : 'N/A'}
+                    </p>
+                    {booking.paymentStatus && (
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded mb-2 ${
+                        booking.paymentStatus === 'Demo Paid' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                        booking.paymentStatus === 'Failed' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                        'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      }`}>
+                        {booking.paymentStatus}
+                      </span>
+                    )}
                     <button
                       onClick={() => downloadTicket(booking)}
                       disabled={downloadingId === booking.id || booking.status === 'Cancelled'}
@@ -145,7 +200,7 @@ export default function MyBookings() {
                       {downloadingId === booking.id ? <Loader className="animate-spin" size={16} /> : <Download size={16} />}
                       E-Ticket
                     </button>
-                    <p className="text-xs text-gray-400 mt-3 text-center md:text-right">Booked on:<br/>{formatDate(booking.bookingDate)}</p>
+                    <p className="text-xs text-gray-400 mt-2 text-center md:text-right">Booked on:<br/>{formatDate(booking.bookingDate)}</p>
                   </div>
                 </div>
 
