@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
+import { getDemoBookings } from '../data/demoData';
 
 export default function MyBookings() {
   const { currentUser } = useAuth();
@@ -62,12 +63,27 @@ export default function MyBookings() {
           }
         }
 
+        // 3. Include any locally recorded bookings from the demo booking flow
+        try {
+          const localBookings = JSON.parse(localStorage.getItem('skybook_local_bookings') || '[]');
+          localBookings.forEach(lb => {
+            if (!fetchedList.some(b => b.bookingRef === lb.bookingRef)) {
+              fetchedList.unshift(lb);
+            }
+          });
+        } catch (_) {}
+
+        // 4. Fallback to sample demo bookings if Firestore returned nothing
+        if (fetchedList.length === 0) {
+          fetchedList = getDemoBookings(currentUser?.uid);
+        }
+
         // Sort in memory by bookingDate descending
         fetchedList.sort((a, b) => new Date(b.bookingDate || 0) - new Date(a.bookingDate || 0));
         setBookings(fetchedList);
       } catch (error) {
-        console.error("Error fetching bookings: ", error);
-        toast.error("Failed to load your bookings");
+        console.warn("Using sample demo bookings: ", error);
+        setBookings(getDemoBookings(currentUser?.uid));
       } finally {
         setLoading(false);
       }

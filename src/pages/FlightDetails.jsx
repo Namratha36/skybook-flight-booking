@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Plane, Clock, ShieldCheck, Luggage, Ban, Info, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getDemoFlights } from '../data/demoData';
 
 export default function FlightDetails() {
   const { id } = useParams();
@@ -20,10 +21,12 @@ export default function FlightDetails() {
         if (docSnap.exists()) {
           setFlight({ id: docSnap.id, ...docSnap.data() });
         } else {
-          console.log("No such flight!");
+          const fallback = getDemoFlights().find(f => f.id === id || f._demoId === id);
+          if (fallback) setFlight(fallback);
         }
       } catch (error) {
-        console.error("Error fetching flight:", error);
+        const fallback = getDemoFlights().find(f => f.id === id || f._demoId === id);
+        if (fallback) setFlight(fallback);
       } finally {
         setLoading(false);
       }

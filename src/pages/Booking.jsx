@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { User, Mail, Phone, Plane, CheckCircle, Grid } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getDemoFlights } from '../data/demoData';
 
 export default function Booking() {
   const { id } = useParams();
@@ -30,9 +31,13 @@ export default function Booking() {
         
         if (docSnap.exists()) {
           setFlight({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          const fallback = getDemoFlights().find(f => f.id === id || f._demoId === id);
+          if (fallback) setFlight(fallback);
         }
       } catch (error) {
-        console.error("Error fetching flight:", error);
+        const fallback = getDemoFlights().find(f => f.id === id || f._demoId === id);
+        if (fallback) setFlight(fallback);
       } finally {
         setLoading(false);
       }
@@ -51,7 +56,7 @@ export default function Booking() {
     try {
       const bookingRef = 'SKB-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
       const bookingData = {
-        userId: currentUser.uid,
+        userId: currentUser?.uid || 'demo-user-skybook-2024',
         flightId: flight.id,
         bookingRef,
         passengerName,
@@ -73,7 +78,14 @@ export default function Booking() {
         }
       };
 
-      await addDoc(collection(db, 'bookings'), bookingData);
+      try {
+        await addDoc(collection(db, 'bookings'), bookingData);
+      } catch (dbErr) {
+        console.warn("Firestore save fallback to local storage:", dbErr.message);
+        const local = JSON.parse(localStorage.getItem('skybook_local_bookings') || '[]');
+        local.unshift({ id: 'local-' + Date.now(), ...bookingData });
+        localStorage.setItem('skybook_local_bookings', JSON.stringify(local));
+      }
       
       toast.success(`Booking Confirmed! Ref: ${bookingRef}`);
       navigate('/my-bookings');

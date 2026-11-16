@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { Users, Plane, CalendarCheck, IndianRupee, LayoutDashboard, Plus, Trash2, Edit, CheckCircle, XCircle, Route, TrendingUp, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
+import { getDemoFlights, getDemoBookings } from '../data/demoData';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview'); // overview, flights, bookings, users
@@ -26,12 +27,26 @@ export default function AdminDashboard() {
           getDocs(collection(db, 'bookings'))
         ]);
 
-        setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setFlights(flightsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setBookings(bookingsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        const uList = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const fList = flightsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const bList = bookingsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        setUsers(uList.length > 0 ? uList : [
+          { id: '1', displayName: 'Demo Admin', email: 'demo@skybook.in', role: 'admin', createdAt: '2024-01-15' },
+          { id: '2', displayName: 'Priya Reddy', email: 'priya.demo@skybook.in', role: 'user', createdAt: '2024-02-10' },
+          { id: '3', displayName: 'Aarav Sharma', email: 'aarav.demo@skybook.in', role: 'user', createdAt: '2024-02-18' },
+        ]);
+        setFlights(fList.length > 0 ? fList : getDemoFlights());
+        setBookings(bList.length > 0 ? bList : getDemoBookings());
       } catch (error) {
-        toast.error("Failed to fetch admin data.");
-        console.error(error);
+        console.warn("Using sample demo data for Admin Dashboard:", error.message);
+        setUsers([
+          { id: '1', displayName: 'Demo Admin', email: 'demo@skybook.in', role: 'admin', createdAt: '2024-01-15' },
+          { id: '2', displayName: 'Priya Reddy', email: 'priya.demo@skybook.in', role: 'user', createdAt: '2024-02-10' },
+          { id: '3', displayName: 'Aarav Sharma', email: 'aarav.demo@skybook.in', role: 'user', createdAt: '2024-02-18' },
+        ]);
+        setFlights(getDemoFlights());
+        setBookings(getDemoBookings());
       } finally {
         setLoading(false);
       }

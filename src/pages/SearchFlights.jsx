@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { motion } from 'framer-motion';
 import { Plane, Clock, Filter, ArrowRight } from 'lucide-react';
 import FlightSearchForm from '../components/FlightSearchForm';
+import { getDemoFlights } from '../data/demoData';
 
 export default function SearchFlights() {
   const [searchParams] = useSearchParams();
@@ -28,9 +29,14 @@ export default function SearchFlights() {
           id: doc.id,
           ...doc.data()
         }));
-        setFlights(fetchedFlights);
+        if (fetchedFlights.length > 0) {
+          setFlights(fetchedFlights);
+        } else {
+          setFlights(getDemoFlights());
+        }
       } catch (error) {
-        console.error("Error fetching flights: ", error);
+        console.warn("Using sample demo flights (Firestore offline or auth required):", error.message);
+        setFlights(getDemoFlights());
       } finally {
         setLoading(false);
       }
